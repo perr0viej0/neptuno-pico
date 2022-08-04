@@ -35,52 +35,51 @@ fb_regando = framebuf.FrameBuffer(buf_regando, 128, 64, framebuf.MONO_HLSB)
 """########### BLOQUE FUNCIONES #######################"""
 
 
-def riega():                            # funcion riega, controla riego, voltaje bateria y nivel de agua
+def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
     while True:
-        Vsys = ADC(29)                  # leemos voltaje vsys
+        sleep(5)  # tiempo para bucle, def= 3600
+        Vsys = ADC(29)  # leemos voltaje vsys
         Pin(29, Pin.IN)
         conversion = (3.3 / (65535)) * 3
         volts = Vsys.read_u16() * conversion
         porcent = (volts - 2.7) * 100
         volts = round(volts, 2)
         porcent = round(porcent, 2)
-        if porcent <= 20:               # si es menor de 20%
-            display.fill(0)             # sacamos warning por display 3 segundos
+        if porcent <= 20:  # si es menor de 20%
+            display.fill(0)  # sacamos warning por display 3 segundos
             display.poweron()
-            display.text("WARNING",0, 0)
-            display.text(f"queda un {porcent}%",0, 16)
-            display.text("de bateria",0,26)
+            display.text("WARNING", 0, 0)
+            display.text(f"queda un {porcent}%", 0, 16)
+            display.text("de bateria", 0, 26)
             display.text(f"{volts} V in", 0, 36)
             display.show()
             sleep(3)
             display.poweroff()
         else:
-            continue
-        sleep(15)                       # tiempo para bucle, def= 3600
-        relesonda.value(0)              # encendemos sonda
-        sleep(.5)                        # esperamos 500ms
-        sensor_suelo = adc.read_u16()   # leemos valor de sonda
-        relesonda.value(1)              # apagamos sonda
-        sensor_suelo = sensor_suelo / 655.35    # pasamos valor a %
-        humedad_suelo = 100 - sensor_suelo      # obtenemos % seco, lo restamos a 100 para tener % humedad
-        if humedad_suelo <= 60:           # valores para mantener: entre 40% y 75% humedad
-            if sensor_awa.value() == 1:         # comprobamos si hay agua
-                relebomba.value(0)              # y encendemos bomba
-                regando()                       # display regadera
-                sleep(3)                        # tiempo de riego
-                display.poweroff()
-                display.fill(0)
-                relebomba.value(1)              # apagado de bomba
-            else:
-                alarma_awa()                    # alarma deposito sin agua, display alarma
-                break
+            pass
+        relesonda.value(0)  # encendemos sonda
+        sleep(.5)  # esperamos 500ms
+        sensor_suelo = adc.read_u16()  # leemos valor de sonda
+        relesonda.value(1)  # apagamos sonda
+        sensor_suelo = sensor_suelo / 655.35  # pasamos valor a %
+        humedad_suelo = 100 - sensor_suelo  # obtenemos % seco, lo restamos a 100 para tener % humedad
+        if humedad_suelo < 9:
+            alarma_suelo()  # alarma sonda suelo, display alarma
+            break
         elif humedad_suelo >= 95:
             alarma_suelo()
             break
-
-        elif humedad_suelo < 9:
-            alarma_suelo()                      # alarma sonda suelo, display alarma
-            break
+        elif humedad_suelo <= 60:  # valores para mantener: entre 40% y 75% humedad
+            if sensor_awa.value() == 1:  # comprobamos si hay agua
+                relebomba.value(0)  # y encendemos bomba
+                regando()  # display regadera
+                sleep(3)  # tiempo de riego
+                display.poweroff()
+                display.fill(0)
+                relebomba.value(1)  # apagado de bomba
+            else:
+                alarma_awa()  # alarma deposito sin agua, display alarma
+                break
 
 
 def intro():
