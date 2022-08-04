@@ -42,7 +42,7 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
         Pin(29, Pin.IN)
         conversion = (3.3 / (65535)) * 3
         volts = Vsys.read_u16() * conversion
-        porcent = (volts - 2.7) * 100
+        porcent = (volts - 2.7) * 83.333
         volts = round(volts, 2)
         porcent = round(porcent, 2)
         if porcent <= 20:  # si es menor de 20%
@@ -164,7 +164,7 @@ def mainloop():
                 Pin(29, Pin.IN)                         # 29 pull up
                 conversion = (3.3 / (65535)) * 3        # factor de conversion
                 volts = Vsys.read_u16() * conversion    # lectura voltaje vsys
-                porcent = (volts - 2.7) * 100        # calc % en base a voltaje celda Li 18650 (min. 2.7, max 3.7)
+                porcent = (volts - 2.7) * 83.333        # calc % en base a voltaje celda Li 18650 (min. 2.7, max 3.7)
                 volts = round(volts, 2)
                 porcent = round(porcent, 2)
                 if sensor_awa.value() == 1:
