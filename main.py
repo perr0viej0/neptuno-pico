@@ -1,6 +1,11 @@
 """####################################################################################
 Neptuno-pico v0.4
 Sistema de riego automatico con deposito.
+TODO: - cambiar pico por pico W
+      - añadir alarmas a movil mediante PUSH (pushsafer.py)
+      - cambiar bomba por valvulas solenoides
+      - auto-relleno del deposito
+
 Ingredientes:
 - Raspberry pi pico
 (https://www.kubii.es/raspberry-pi-3-2-b/3205-raspberry-pi-pico-3272496311589.html?search_query=pico&results=35)
