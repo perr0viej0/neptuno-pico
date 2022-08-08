@@ -109,7 +109,7 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
         elif humedad_suelo >= 95:
             alarma_suelo()
             break
-        elif humedad_suelo <= 60:  # valores para mantener: entre 40% y 60% humedad
+        elif humedad_suelo <= 60:  # valor para mantener: 60% humedad
             releawa.value(0)
             sleep(.5)
             if sensor_awa.value() == 1:  # comprobamos si hay agua
