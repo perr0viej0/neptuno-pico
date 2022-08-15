@@ -1,13 +1,12 @@
 """####################################################################################
-Neptuno-pico v0.4
+Neptuno-pico v0.5
 Sistema de riego automatico con deposito.
-TODO: - cambiar pico por pico W
-      - añadir alarmas a movil mediante PUSH (pushsafer.py)
+TODO: + cambiar pico por pico W
+      + añadir alarmas a movil mediante PUSH (pushsafer.py)
       - cambiar bomba por valvulas solenoides
       - auto-relleno del deposito
-
 Ingredientes:
-- Raspberry pi pico
+- Raspberry pi pico (pico w)
 (https://www.kubii.es/raspberry-pi-3-2-b/3205-raspberry-pi-pico-3272496311589.html?search_query=pico&results=35)
 - bomba de agua inmersion 5v
 (https://es.aliexpress.com/item/1005004462174007.html?spm=a2g0o.order_list.0.0.d74d194dczoGwC&gatewayAdapt=glo2esp)
@@ -23,7 +22,6 @@ Ingredientes:
 (https://es.aliexpress.com/item/1005002774250950.html?spm=a2g0o.order_list.0.0.d74d194dczoGwC&gatewayAdapt=glo2esp)
 - display OLED 128x64 0.96" yb
 (https://es.aliexpress.com/item/4001066065622.html?spm=a2g0o.order_list.0.0.d74d194dczoGwC&gatewayAdapt=glo2esp)
-
 PINOUT:
 oled -> sda pin0, sdc pin1
 hcsr04 -> echo pin18, trig pin19
@@ -34,21 +32,22 @@ rele sonda -> pin10
 rele bomba -> pin11
 rele sensor nivel -> pin12
 rele dht22 -> pin13
-
 *boton RST -> pin RUN y GND
 *18650 conectado a VSYS y GND
-
 by Alejandro Pose - https://www.github.com/perr0viej0/neptuno-pico
 #######################################################################################"""
+
 from machine import I2C, Pin, ADC
 import ssd1306
 import framebuf
 from time import sleep
 from hcsr04 import HCSR04
-from variables import (logo, alarma, regando)
+from variables import (logo, alarma, regando) # definir SSID y PaSS en variables.py e importar
+import secrets
 from DHT22 import DHT22
 from _thread import start_new_thread as nuevo_hilo
-
+from pushsafer import Client
+import network
 """##### IMPORTS ####"""
 
 """#### VARIABLES #####"""
@@ -78,14 +77,35 @@ fb_regando = framebuf.FrameBuffer(buf_regando, 128, 64, framebuf.MONO_HLSB)
 Vsys = ADC(29)  # establecemos el adc29 para vsys
 Pin(29, Pin.IN)  # y lo levantamos
 conversion = (3.3 / (65535)) * 3  # factor de conversion de adc a volts
+TIEMPO = 3600 # 300:5 min; 600:10 min; 900:15 min; 1800:30 min; 3600:60 min
 """############ FIN VARIABLES ######################"""
 
 """########### BLOQUE FUNCIONES #######################"""
+def envia_alarma(x):
+#1 = alarma agua; 2 = alarma suelo
+
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    cont=0
+    while wlan.isconnected() == False or cont <= 10:
+        wlan.connect(secrets.SSID, secrets.PASS)
+        sleep(.5)
+        cont += 1
+    client = Client(secrets.KEY)
+    titulo = "ALERTA NEPTUNO"
+    if x == 1:
+        mens = "Alerta de Deposito, no hay agua"
+        client.send_message(mens, titulo, "gs4041", "33", "5", "3")
+    elif x == 2:
+        mens = "Alerta de sonda suelo, los valores son incorrectos. Revisar"
+        client.send_message(mens, titulo, "gs4041", "33", "5", "3")
+    wlan.disconnect()
+    wlan.active(False)
 
 
 def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
     while True:
-        sleep(60)  # tiempo para bucle, def= 3600
+        sleep(300)  # tiempo para bucle, def= 3600
         volts = Vsys.read_u16() * conversion  # leemos vsys
         porcent = (volts - 2.7) * 71.4285  # porcentaje en base a LiIon 18650 min 2.7 max 4.1 v
         volts = round(volts, 2)
@@ -109,9 +129,11 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
         sensor_suelo = sensor_suelo / 655.35  # pasamos valor a %
         humedad_suelo = 100 - sensor_suelo  # obtenemos % seco, lo restamos a 100 para tener % humedad
         if humedad_suelo < 9:
+            envia_alarma(2)
             alarma_suelo()  # alarma sonda suelo, display alarma
             break
         elif humedad_suelo >= 95:
+            envia_alarma(2)
             alarma_suelo()
             break
         elif humedad_suelo <= 60:  # valor para mantener: 60% humedad
@@ -127,6 +149,7 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
                 releawa.value(1)  # apagado sensor nivel
             else:
                 releawa.value(1)
+                envia_alarma(1)
                 alarma_awa()  # alarma deposito sin agua, display alarma
                 break
 

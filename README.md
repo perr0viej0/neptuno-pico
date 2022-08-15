@@ -4,7 +4,7 @@ Sistema de riego automatico con raspberry pi pico
 Neptuno es un montaje de raspberry pi pico y micropython, junto con los sensores necesarios para obtener
 un sistema de riego automatico basado en deposito y configurable
 
-El montaje dispone de un lcd 16x2 para mostrar informacion, un sensor dht22 para temperatura y humedad,
+El montaje dispone de un OLED 0.96" para mostrar informacion, un sensor dht22 para temperatura y humedad,
 un sensor de nivel de agua para el deposito, una bomba sumergible, una caja de 4 relés, una sonda
 de humedad de suelo y un modulo ultrasonido de medicion de distancia.
 
