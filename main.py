@@ -1,10 +1,7 @@
 """####################################################################################
 Neptuno-pico v0.5
 Sistema de riego automatico con deposito.
-TODO: + cambiar pico por pico W
-      + añadir alarmas a movil mediante PUSH (pushsafer.py)
-      - cambiar bomba por valvulas solenoides
-      - auto-relleno del deposito
+
 Ingredientes:
 - Raspberry pi pico (pico w)
 (https://www.kubii.es/raspberry-pi-3-2-b/3205-raspberry-pi-pico-3272496311589.html?search_query=pico&results=35)
@@ -81,31 +78,12 @@ TIEMPO = 3600 # 300:5 min; 600:10 min; 900:15 min; 1800:30 min; 3600:60 min
 """############ FIN VARIABLES ######################"""
 
 """########### BLOQUE FUNCIONES #######################"""
-def envia_alarma(x):
-#1 = alarma agua; 2 = alarma suelo
 
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    cont=0
-    while wlan.isconnected() == False or cont <= 10:
-        wlan.connect(secrets.SSID, secrets.PASS)
-        sleep(.5)
-        cont += 1
-    client = Client(secrets.KEY)
-    titulo = "ALERTA NEPTUNO"
-    if x == 1:
-        mens = "Alerta de Deposito, no hay agua"
-        client.send_message(mens, titulo, "gs4041", "33", "5", "3")
-    elif x == 2:
-        mens = "Alerta de sonda suelo, los valores son incorrectos. Revisar"
-        client.send_message(mens, titulo, "gs4041", "33", "5", "3")
-    wlan.disconnect()
-    wlan.active(False)
 
 
 def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
     while True:
-        sleep(300)  # tiempo para bucle, def= 3600
+        sleep(TIEMPO)  # tiempo para bucle, def= 3600
         volts = Vsys.read_u16() * conversion  # leemos vsys
         porcent = (volts - 2.7) * 71.4285  # porcentaje en base a LiIon 18650 min 2.7 max 4.1 v
         volts = round(volts, 2)
@@ -129,11 +107,9 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
         sensor_suelo = sensor_suelo / 655.35  # pasamos valor a %
         humedad_suelo = 100 - sensor_suelo  # obtenemos % seco, lo restamos a 100 para tener % humedad
         if humedad_suelo < 9:
-            envia_alarma(2)
             alarma_suelo()  # alarma sonda suelo, display alarma
             break
         elif humedad_suelo >= 95:
-            envia_alarma(2)
             alarma_suelo()
             break
         elif humedad_suelo <= 60:  # valor para mantener: 60% humedad
@@ -149,7 +125,6 @@ def riega():  # funcion riega, controla riego, voltaje bateria y nivel de agua
                 releawa.value(1)  # apagado sensor nivel
             else:
                 releawa.value(1)
-                envia_alarma(1)
                 alarma_awa()  # alarma deposito sin agua, display alarma
                 break
 
