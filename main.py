@@ -40,11 +40,9 @@ import framebuf
 from time import sleep
 from hcsr04 import HCSR04
 from variables import (logo, alarma, regando) # definir SSID y PaSS en variables.py e importar
-import secrets
 from DHT22 import DHT22
 from _thread import start_new_thread as nuevo_hilo
-from pushsafer import Client
-import network
+
 """##### IMPORTS ####"""
 
 """#### VARIABLES #####"""
